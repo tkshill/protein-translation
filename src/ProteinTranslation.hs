@@ -76,16 +76,18 @@ codonToProtein codon =
     UGG -> Tryptophan
 
 parser :: String -> [Protein]
-parser = parser_ []
+parser = flip parser0 []
 
-parser_ :: [Protein] -> String -> [Protein]
-parser_ accumulator (x : y : z : rest) =
-  case strToCodon [x, y, z] of
-    Nothing -> accumulator
-    Just (Stop _) -> accumulator
+parser0 :: String -> [Protein] -> [Protein]
+parser0 (char1 : char2 : char3 : remainder) collector =
+  case strToCodon first3chars of
     Just (Prot codon) ->
-      flip parser_ rest $ accumulator ++ [codonToProtein codon]
-parser_ accumulator _ = accumulator
+      parser0 remainder $ updateCollector $ codonToProtein codon
+    _ -> collector
+  where
+    first3chars = [char1, char2, char3]
+    updateCollector x = collector ++ [x]
+parser0 _ collector = collector
 
 proteins :: String -> Maybe [String]
 proteins str =
