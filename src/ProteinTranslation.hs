@@ -80,16 +80,16 @@ isProtCodon :: Codon -> Bool
 isProtCodon (Prot _) = True
 isProtCodon _ = False
 
-toProtCodon :: Codon -> [ProteinCodon]
-toProtCodon (Prot z) = [z]
-toProtCodon _ = []
+toProtCodon :: Codon -> Maybe ProteinCodon
+toProtCodon (Prot z) = Just z
+toProtCodon _ = Nothing
 
 tokenize :: String -> Maybe [Codon]
 tokenize str = mapM toCodon $ chunksOf 3 str
 
 proteins :: String -> Maybe [String]
 proteins str =
-  map (show . toProtein) . castToProteinCodons . takeUntilStop <$> tokenize str
+  map (show . toProtein) <$> (castToProteinCodons . takeUntilStop =<< tokenize str)
   where
     takeUntilStop = takeWhile isProtCodon
-    castToProteinCodons cs = concatMap toProtCodon cs
+    castToProteinCodons = mapM toProtCodon
