@@ -1,5 +1,6 @@
 module ProteinTranslation (proteins) where
 
+import Data.List.Split
 data ProteinCodon
   = AUG
   | UUU
@@ -75,19 +76,20 @@ toProtein codon =
     UGC -> Cysteine
     UGG -> Tryptophan
 
-parse :: String -> Maybe [Protein] -> Maybe [Protein]
-parse (x : y : z : rest) acc@(Just ps) =
-  continue =<< toCodon [x, y, z]
-  where
-    toPcodon (Prot c) = Just c
-    toPcodon _ = Nothing
-    updatedAcc pcodon = Just $ ps ++ [toProtein pcodon]
-    recurse = parse rest . updatedAcc
-    continue = maybe acc recurse . toPcodon
+isProtCodon :: Codon -> Bool
+isProtCodon (Prot _) = True
+isProtCodon _ = False
 
-parse [] acc@(Just _) = acc
-parse _ _ = Nothing
+toProtCodon :: Codon -> [ProteinCodon]
+toProtCodon (Prot z) = [z]
+toProtCodon _ = []
+
+tokenize :: String -> Maybe [Codon]
+tokenize str = mapM toCodon $ chunksOf 3 str
 
 proteins :: String -> Maybe [String]
 proteins str =
-  fmap (map show) $ parse str $ Just []
+  map (show . toProtein) . castToProteinCodons . takeUntilStop <$> tokenize str
+  where
+    takeUntilStop = takeWhile isProtCodon
+    castToProteinCodons cs = concatMap toProtCodon cs
