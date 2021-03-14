@@ -91,12 +91,12 @@ toProtCodon _ = Nothing
 
 -- if any chunk can't be converted to a codon, returns Nothing
 tokenize :: String -> Maybe [Codon]
-tokenize str = mapM toCodon $ chunksOf 3 str
+tokenize = mapM toCodon . chunksOf 3
 
 proteins :: String -> Maybe [String]
-proteins str =
-  -- using functor map <$> to weave maybes through computation
-  toProteinStrings . takeWhilePcodons <$> tokenize str
+proteins =
+  -- using functor map to weave maybes through computation
+  fmap (toProteinStrings . takeWhilePcodons) . tokenize
   where
     toProteinStrings = map (show . toProtein)
     -- takes from the list until it hits a codon that can't be turned to a protein
