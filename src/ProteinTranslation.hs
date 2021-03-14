@@ -1,6 +1,8 @@
 module ProteinTranslation (proteins) where
 
 import Data.List.Split (chunksOf)
+import Data.Maybe (mapMaybe)
+
 data ProteinCodon
   = AUG
   | UUU
@@ -93,9 +95,9 @@ tokenize str = mapM toCodon $ chunksOf 3 str
 
 proteins :: String -> Maybe [String]
 proteins str =
-  -- using bind (=<<) and map <$> to weave maybes through computation
-  toProteinStrings <$> (takeWhilePcodons =<< tokenize str)
+  -- using functor map <$> to weave maybes through computation
+  toProteinStrings . takeWhilePcodons <$> tokenize str
   where
     toProteinStrings = map (show . toProtein)
     -- takes from the list until it hits a codon that can't be turned to a protein
-    takeWhilePcodons = mapM toProtCodon . takeWhile isProtCodon
+    takeWhilePcodons = mapMaybe toProtCodon . takeWhile isProtCodon
