@@ -35,8 +35,8 @@ data Protein
   | Tryptophan
   deriving (Show)
 
-strToCodon :: String -> Maybe Codon
-strToCodon str =
+toCodon :: String -> Maybe Codon
+toCodon str =
   case str of
     "AUG" -> Just $ Prot AUG
     "UUU" -> Just $ Prot UUU
@@ -57,8 +57,8 @@ strToCodon str =
     "UGA" -> Just $ Stop UGA
     _ -> Nothing
 
-codonToProtein :: ProteinCodon -> Protein
-codonToProtein codon =
+toProtein :: ProteinCodon -> Protein
+toProtein codon =
   case codon of
     AUG -> Methionine
     UUU -> Phenylalanine
@@ -75,20 +75,19 @@ codonToProtein codon =
     UGC -> Cysteine
     UGG -> Tryptophan
 
-parser :: String -> [Protein]
-parser = flip parser0 []
-
-parser0 :: String -> [Protein] -> [Protein]
-parser0 (char1 : char2 : char3 : remainder) collector =
-  case strToCodon first3chars of
-    Just (Prot codon) ->
-      parser0 remainder $ updateCollector $ codonToProtein codon
-    _ -> collector
+parse :: String -> Maybe [Protein] -> Maybe [Protein]
+parse (x : y : z : rest) acc@(Just ps) =
+  continue =<< toCodon [x, y, z]
   where
-    first3chars = [char1, char2, char3]
-    updateCollector x = collector ++ [x]
-parser0 _ collector = collector
+    toPcodon (Prot c) = Just c
+    toPcodon _ = Nothing
+    updatedAcc pcodon = Just $ ps ++ [toProtein pcodon]
+    recurse = parse rest . updatedAcc
+    continue = maybe acc recurse . toPcodon
+
+parse [] acc@(Just _) = acc
+parse _ _ = Nothing
 
 proteins :: String -> Maybe [String]
 proteins str =
-  Just $ map show $ parser str
+  fmap (map show) $ parse str $ Just []
