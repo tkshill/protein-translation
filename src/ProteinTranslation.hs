@@ -89,7 +89,8 @@ tokenize str = mapM toCodon $ chunksOf 3 str
 
 proteins :: String -> Maybe [String]
 proteins str =
-  map (show . toProtein) <$> (castToProteinCodons . takeUntilStop =<< tokenize str)
+  toProteinStrings <$> (takeWhilePcodons =<< tokenize str)
   where
-    takeUntilStop = takeWhile isProtCodon
-    castToProteinCodons = mapM toProtCodon
+    toProteinStrings = map (show . toProtein)
+    
+    takeWhilePcodons = mapM toProtCodon . takeWhile isProtCodon
